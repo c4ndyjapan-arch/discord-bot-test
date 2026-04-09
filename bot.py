@@ -152,12 +152,12 @@ async def on_message(message: discord.Message):
     async with message.channel.typing():
         try:
             reply = await get_gemini_response(message.channel.id, message.content)
-            await message.channel.send(reply)
+            await message.reply(reply, mention_author=False)
         except Exception as e:
             # 오류 발생 시 사용자에게 에러 메시지 전송
             error_msg = f"오류가 발생했습니다: {str(e)}"
             print(f"Gemini API 오류: {e}")
-            await message.channel.send(error_msg)
+            await message.reply(error_msg, mention_author=False)
 
 # 봇 실행
 if __name__ == "__main__":
