@@ -9,7 +9,7 @@ Google AI Studio의 Gemini API를 활용한 Python 기반 Discord 자동 응답 
 
 - Python **3.10** 이상
 - **Discord Bot Token** ([Discord Developer Portal](https://discord.com/developers/applications)에서 발급)
-- **Google AI Studio Gemini API Key** ([aistudio.google.com](https://aistudio.google.com)에서 발급)
+- **Google AI Studio Gemini API Key** ([aistudio.google.com](https://aistudio.google.com)에서 발급) — 봇 실행 후 DM으로 설정
 
 ---
 
@@ -30,7 +30,7 @@ pip install -r requirements.txt
 
 ### 3. 환경변수 설정
 
-`.env.example` 파일을 복사하여 `.env` 파일을 만들고 API 키를 입력합니다.
+`.env.example` 파일을 복사하여 `.env` 파일을 만들고 값을 입력합니다.
 
 ```bash
 cp .env.example .env
@@ -40,10 +40,13 @@ cp .env.example .env
 
 ```env
 DISCORD_TOKEN=your_discord_bot_token_here
-GEMINI_API_KEY=your_gemini_api_key_here
+OWNER_ID=your_discord_user_id_here
 BOT_CHANNEL_NAME=bot-chat
 MAX_HISTORY=50
 ```
+
+> **OWNER_ID 확인 방법:**  
+> Discord 설정 → 고급 → **개발자 모드** 활성화 → 본인 프로필 우클릭 → **사용자 ID 복사**
 
 ### 4. 캐릭터 설명 수정 (선택 사항)
 
@@ -87,6 +90,21 @@ Discord 봇을 시작합니다...
 
 ---
 
+## Gemini API 키 설정 (DM 명령어)
+
+봇을 실행한 후, **봇에게 DM(다이렉트 메시지)** 으로 아래 명령어를 전송하면 API 키가 설정됩니다.
+
+```
+!api YOUR_GEMINI_API_KEY_HERE
+```
+
+- `.env`의 `OWNER_ID`에 등록된 소유자만 API 키를 설정할 수 있습니다.
+- API 키는 `config.json` 파일에 저장되며, 봇을 재시작해도 유지됩니다.
+- `config.json`은 자동으로 생성되므로 직접 만들 필요가 없습니다.
+- API 키가 설정되지 않은 상태에서 `#bot-chat`에 메시지가 오면 안내 메시지가 표시됩니다.
+
+---
+
 ## 커스터마이징
 
 ### 캐릭터 변경
@@ -116,6 +134,7 @@ MAX_HISTORY=100  # 최근 100개의 대화를 기억
 discord-bot-test/
 ├── bot.py                  # 메인 봇 코드
 ├── char-description.txt    # 캐릭터 설명 (수정 가능)
+├── config.json             # Gemini API 키 저장 (자동 생성, gitignore 처리됨)
 ├── .env.example            # 환경변수 예시 파일
 ├── .env                    # 실제 환경변수 파일 (gitignore 처리됨)
 ├── .gitignore
