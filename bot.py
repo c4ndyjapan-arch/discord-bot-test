@@ -66,10 +66,24 @@ def save_config(config: dict):
     """config.json에 설정을 저장합니다."""
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, ensure_ascii=False, indent=2)
+    # 인메모리 캐시 갱신
+    _config_cache.update(config)
+    _apply_api_key()
+
+
+def _apply_api_key():
+    """캐시된 API 키로 Gemini를 설정합니다."""
+    api_key = _config_cache.get("gemini_api_key", "").strip()
+    if api_key:
+        genai.configure(api_key=api_key)
 
 
 # 봇 시작 시 캐릭터 설명 로드
 system_prompt = load_char_description()
+
+# 설정 인메모리 캐시 (파일 반복 읽기 방지)
+_config_cache: dict = load_config()
+_apply_api_key()
 
 # 채널별 대화 기록: {channel_id: deque(maxlen=MAX_HISTORY)}
 conversation_history: dict[int, deque] = {}
@@ -97,18 +111,14 @@ def build_gemini_contents(history: deque, new_message: str) -> list:
     return contents
 
 
-async def get_gemini_response(channel_id: int, user_message: str):
+async def get_gemini_response(channel_id: int, user_message: str) -> str | None:
     """
     Gemini API를 호출하여 응답을 생성합니다.
     API 키가 설정되지 않은 경우 None을 반환합니다.
     """
-    config = load_config()
-    api_key = config.get("gemini_api_key", "").strip()
+    api_key = _config_cache.get("gemini_api_key", "").strip()
     if not api_key:
         return None
-
-    # API 키 설정
-    genai.configure(api_key=api_key)
 
     # 대화 기록 및 contents 구성
     history = get_channel_history(channel_id)
@@ -150,8 +160,7 @@ async def on_ready():
     print(f"응답 채널: #{BOT_CHANNEL_NAME}")
     print(f"최대 대화 기록: {MAX_HISTORY}개")
     print(f"사용 모델: {GEMINI_MODEL}")
-    config = load_config()
-    if config.get("gemini_api_key"):
+    if _config_cache.get("gemini_api_key"):
         print("Gemini API 키: 설정됨 ✅")
     else:
         print("Gemini API 키: 미설정 ⚠️")
@@ -172,7 +181,7 @@ async def on_message(message: discord.Message):
             if message.content.startswith("!api "):
                 new_key = message.content[5:].strip()
                 if new_key:
-                    config = load_config()
+                    config = _config_cache.copy()
                     config["gemini_api_key"] = new_key
                     save_config(config)
                     await message.reply(
